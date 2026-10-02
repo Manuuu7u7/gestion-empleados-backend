@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 
 import HomeScreen from './src/screens/HomeScreen';
 import RegistrarScreen from './src/screens/RegistrarScreen';
+import DetalleScreen from './src/screens/DetalleScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -16,13 +17,9 @@ export default function App() {
                 <Stack.Navigator
                     initialRouteName="Home"
                     screenOptions={{
-                        headerStyle: {
-                            backgroundColor: '#4361ee',
-                        },
+                        headerStyle: { backgroundColor: '#4361ee' },
                         headerTintColor: '#fff',
-                        headerTitleStyle: {
-                            fontWeight: 'bold',
-                        },
+                        headerTitleStyle: { fontWeight: 'bold' },
                     }}
                 >
                     <Stack.Screen
@@ -34,6 +31,11 @@ export default function App() {
                         name="Registrar"
                         component={RegistrarScreen}
                         options={{ title: 'Nuevo Empleado' }}
+                    />
+                    <Stack.Screen
+                        name="Detalle"
+                        component={DetalleScreen}
+                        options={{ title: 'Detalle del Empleado' }}
                     />
                 </Stack.Navigator>
             </NavigationContainer>

@@ -56,9 +56,9 @@ export default function HomeScreen({ navigation }) {
       setFiltrados(empleados);
     } else {
       const resultado = empleados.filter(
-        (emp) =>
-          emp.nombre?.toLowerCase().includes(texto.toLowerCase()) ||
-          emp.email?.toLowerCase().includes(texto.toLowerCase())
+          (emp) =>
+              emp.nombre?.toLowerCase().includes(texto.toLowerCase()) ||
+              emp.email?.toLowerCase().includes(texto.toLowerCase())
       );
       setFiltrados(resultado);
     }
@@ -66,103 +66,119 @@ export default function HomeScreen({ navigation }) {
 
   const eliminarEmpleado = (id, nombre) => {
     Alert.alert(
-      'Eliminar Empleado',
-      `¿Estás seguro de eliminar a ${nombre}?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await empleadosApi.delete(id);
-              Alert.alert('Éxito', 'Empleado eliminado');
-              cargarEmpleados();
-            } catch (error) {
-              Alert.alert('Error', 'No se pudo eliminar');
-            }
+        'Eliminar Empleado',
+        `¿Estás seguro de eliminar a ${nombre}?`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Eliminar',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await empleadosApi.delete(id);
+                Alert.alert('Éxito', 'Empleado eliminado');
+                cargarEmpleados();
+              } catch (error) {
+                Alert.alert('Error', 'No se pudo eliminar');
+              }
+            },
           },
-        },
-      ]
+        ]
     );
   };
 
   const renderEmpleado = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {item.nombre ? item.nombre.charAt(0).toUpperCase() : 'E'}
-          </Text>
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {item.nombre ? item.nombre.charAt(0).toUpperCase() : 'E'}
+            </Text>
+          </View>
+          <View style={styles.cardInfo}>
+            <Text style={styles.nombre}>{item.nombre}</Text>
+            <Text style={styles.email}>{item.email}</Text>
+            <Text style={styles.departamento}>
+              {item.departamento || 'Sin departamento'}
+            </Text>
+          </View>
+          <View
+              style={[
+                styles.estadoBadge,
+                item.estado === 'ACTIVO' ? styles.activo : styles.inactivo,
+              ]}
+          >
+            <Text style={styles.estadoText}>
+              {item.estado === 'ACTIVO' ? '🟢' : '🔴'}
+            </Text>
+          </View>
         </View>
-        <View style={styles.cardInfo}>
-          <Text style={styles.nombre}>{item.nombre}</Text>
-          <Text style={styles.email}>{item.email}</Text>
-          <Text style={styles.departamento}>
-            {item.departamento || 'Sin departamento'}
-          </Text>
+
+        {/* Botones de acción */}
+        <View style={styles.accionesBotones}>
+          <TouchableOpacity
+              style={[styles.botonAccion, styles.botonVer]}
+              onPress={() => navigation.navigate('Detalle', { empleado: item })}
+          >
+            <Text style={styles.botonAccionTexto}>👁️ Ver</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+              style={[styles.botonAccion, styles.botonEditar]}
+              onPress={() => navigation.navigate('Registrar', { empleado: item })}
+          >
+            <Text style={styles.botonAccionTexto}>✏️ Editar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+              style={[styles.botonAccion, styles.botonEliminar]}
+              onPress={() => eliminarEmpleado(item.id, item.nombre)}
+          >
+            <Text style={styles.botonAccionTexto}>🗑️ Eliminar</Text>
+          </TouchableOpacity>
         </View>
       </View>
-
-      <View
-        style={[
-          styles.estadoBadge,
-          item.estado === 'ACTIVO' ? styles.activo : styles.inactivo,
-        ]}
-      >
-        <Text style={styles.estadoText}>
-          {item.estado === 'ACTIVO' ? '🟢 Activo' : '🔴 Inactivo'}
-        </Text>
-      </View>
-
-      <TouchableOpacity
-        style={styles.botonEliminar}
-        onPress={() => eliminarEmpleado(item.id, item.nombre)}
-      >
-        <Text style={styles.botonTexto}>🗑️ Eliminar</Text>
-      </TouchableOpacity>
-    </View>
   );
 
   if (cargando) {
     return (
-      <View style={styles.centrado}>
-        <ActivityIndicator size="large" color="#4361ee" />
-        <Text style={styles.cargandoTexto}>Cargando empleados...</Text>
-      </View>
+        <View style={styles.centrado}>
+          <ActivityIndicator size="large" color="#4361ee" />
+          <Text style={styles.cargandoTexto}>Cargando empleados...</Text>
+        </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.buscador}
-        placeholder="🔍 Buscar empleado..."
-        value={busqueda}
-        onChangeText={buscar}
-      />
+      <View style={styles.container}>
+        <TextInput
+            style={styles.buscador}
+            placeholder="🔍 Buscar empleado..."
+            value={busqueda}
+            onChangeText={buscar}
+        />
 
-      <TouchableOpacity
-        style={styles.botonNuevo}
-        onPress={() => navigation.navigate('Registrar')}
-      >
-        <Text style={styles.botonNuevoTexto}>+ Nuevo Empleado</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+            style={styles.botonNuevo}
+            onPress={() => navigation.navigate('Registrar')}
+        >
+          <Text style={styles.botonNuevoTexto}>+ Nuevo Empleado</Text>
+        </TouchableOpacity>
 
-      <FlatList
-        data={filtrados}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderEmpleado}
-        refreshControl={
-          <RefreshControl refreshing={refrescando} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          <View style={styles.vacio}>
-            <Text style={styles.vacioTexto}>No hay empleados registrados</Text>
-          </View>
-        }
-      />
-    </View>
+        <FlatList
+            data={filtrados}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderEmpleado}
+            refreshControl={
+              <RefreshControl refreshing={refrescando} onRefresh={onRefresh} />
+            }
+            ListEmptyComponent={
+              <View style={styles.vacio}>
+                <Text style={styles.vacioTexto}>No hay empleados registrados</Text>
+              </View>
+            }
+        />
+      </View>
   );
 }
 
@@ -227,19 +243,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
-    marginBottom: 10,
   },
   activo: { backgroundColor: '#d3f9d8' },
   inactivo: { backgroundColor: '#ffe3e3' },
   estadoText: { fontSize: 12, fontWeight: '600' },
-  botonEliminar: {
-    backgroundColor: '#ff6b6b',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignSelf: 'flex-end',
+  accionesBotones: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f2f5',
+    paddingTop: 12,
+    gap: 8,
   },
-  botonTexto: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  botonAccion: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  botonVer: { backgroundColor: '#4dabf7' },
+  botonEditar: { backgroundColor: '#fcc419' },
+  botonEliminar: { backgroundColor: '#ff6b6b' },
+  botonAccionTexto: { color: '#fff', fontSize: 12, fontWeight: '600' },
   vacio: { padding: 60, alignItems: 'center' },
   vacioTexto: { color: '#999', fontSize: 16 },
 });

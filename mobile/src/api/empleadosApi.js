@@ -1,30 +1,42 @@
 import axios from 'axios';
 
-// ⭐ USA LA URL DE NGROK
-const API_URL = 'https://phonebook-stubborn-fable.ngrok-free.dev/api/empleados';
+// ⭐ URL FIJA DE RAILWAY
+const API_URL = 'https://gestion-empleados-backend-production.up.railway.app/api/empleados';
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 15000,
 });
 
 export const empleadosApi = {
-  // GET /api/empleados
+  // Obtener todos
   getAll: async () => {
     const response = await api.get('');
     return response.data;
   },
 
-  // POST /api/empleados
+  // Obtener uno por ID
+  getById: async (id) => {
+    const response = await api.get(`/${id}`);
+    return response.data;
+  },
+
+  // Crear nuevo
   create: async (data) => {
     const response = await api.post('', data);
     return response.data;
   },
 
-  // DELETE /api/empleados/{id}
+  // ⭐ Actualizar (ESTE ERA EL QUE FALTABA)
+  update: async (id, data) => {
+    const response = await api.put(`/${id}`, data);
+    return response.data;
+  },
+
+  // Eliminar
   delete: async (id) => {
     const response = await api.delete(`/${id}`);
     return response.data;

@@ -12,6 +12,7 @@
     "expo-image-picker": "~57.0.14",
     "expo-location": "~57.0.14",
     "expo-status-bar": "~57.0.1",
+    "expo-updates": "~57.0.24",
     "react": "19.2.3",
     "react-native": "0.86.3",
     "react-native-gesture-handler": "^3.3.0",

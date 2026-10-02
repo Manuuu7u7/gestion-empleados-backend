@@ -15,13 +15,26 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "package": "com.manuuu7u7.gestionempleados"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-status-bar"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "93cc9c5e-ad3a-47d6-9597-80f845b246f6"
+      }
+    },
+    "owner": "manuuu7u7",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/93cc9c5e-ad3a-47d6-9597-80f845b246f6"
+    }
   }
 }
