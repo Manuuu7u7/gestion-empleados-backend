@@ -25,6 +25,7 @@ public class EmpleadoDTO {
     @Size(max = 100, message = "El email no puede tener más de 100 caracteres")
     private String email;
 
+    // Sin @NotBlank para permitir actualizaciones sin contraseña
     @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
     private String contrasena;
 
@@ -36,7 +37,7 @@ public class EmpleadoDTO {
 
     private String estado = "ACTIVO";
 
-    @Pattern(regexp = "^[+]?[0-9]{7,15}$", message = "El teléfono debe tener entre 7 y 15 dígitos")
+    @Pattern(regexp = "^[+]?[0-9]{7,15}$|^$", message = "El teléfono debe tener entre 7 y 15 dígitos")
     private String telefono;
 
     @Size(max = 255, message = "La dirección no puede tener más de 255 caracteres")

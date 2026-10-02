@@ -4,6 +4,7 @@ import com.empresa.gestion_empleados.dto.EmpleadoDTO;
 import com.empresa.gestion_empleados.model.Empleado;
 import com.empresa.gestion_empleados.repository.EmpleadoRepositorio;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,9 +14,10 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class EmpleadoServicioImpl implements EmpleadoService {
+public class EmpleadoServicioImpl implements EmpleadoService {   // ⭐ Implementa tu interfaz
 
     private final EmpleadoRepositorio empleadoRepositorio;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public List<Empleado> obtenerTodosLosEmpleados() {
@@ -32,7 +34,7 @@ public class EmpleadoServicioImpl implements EmpleadoService {
         Empleado empleado = new Empleado();
         empleado.setNombre(dto.getNombre());
         empleado.setEmail(dto.getEmail());
-        empleado.setContrasena(dto.getContrasena());
+        empleado.setContrasena(passwordEncoder.encode(dto.getContrasena()));
         empleado.setDepartamento(dto.getDepartamento());
         empleado.setCargo(dto.getCargo());
         empleado.setEstado(dto.getEstado() != null ? dto.getEstado() : "ACTIVO");
@@ -45,7 +47,6 @@ public class EmpleadoServicioImpl implements EmpleadoService {
         }
 
         empleado.setAvatar(dto.getAvatar());
-
         return empleadoRepositorio.save(empleado);
     }
 
@@ -58,7 +59,7 @@ public class EmpleadoServicioImpl implements EmpleadoService {
         empleado.setEmail(dto.getEmail());
 
         if (dto.getContrasena() != null && !dto.getContrasena().isEmpty()) {
-            empleado.setContrasena(dto.getContrasena());
+            empleado.setContrasena(passwordEncoder.encode(dto.getContrasena()));
         }
 
         empleado.setDepartamento(dto.getDepartamento());
@@ -75,12 +76,14 @@ public class EmpleadoServicioImpl implements EmpleadoService {
         }
 
         empleado.setAvatar(dto.getAvatar());
-
         return empleadoRepositorio.save(empleado);
     }
 
     @Override
     public void eliminarEmpleado(Long id) {
+        if (!empleadoRepositorio.existsById(id)) {
+            throw new RuntimeException("Empleado no encontrado con ID: " + id);
+        }
         empleadoRepositorio.deleteById(id);
     }
 

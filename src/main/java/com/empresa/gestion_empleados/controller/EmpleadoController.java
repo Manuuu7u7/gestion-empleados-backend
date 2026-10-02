@@ -3,14 +3,18 @@ package com.empresa.gestion_empleados.controller;
 import com.empresa.gestion_empleados.dto.EmpleadoDTO;
 import com.empresa.gestion_empleados.dto.EmpleadoRespuestaDTO;
 import com.empresa.gestion_empleados.model.Empleado;
-import com.empresa.gestion_empleados.service.EmpleadoService;  // ⭐ service (NO servicio)
+import com.empresa.gestion_empleados.service.EmpleadoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -19,73 +23,92 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "*")
 public class EmpleadoController {
 
-    private final EmpleadoService empleadoService;  // ⭐ service (NO servicio)
+    private final EmpleadoService empleadoServicio;
 
-    // Obtener todos los empleados
     @GetMapping
     public ResponseEntity<List<EmpleadoRespuestaDTO>> obtenerTodosLosEmpleados() {
-        List<Empleado> empleados = empleadoService.obtenerTodosLosEmpleados();
+        List<Empleado> empleados = empleadoServicio.obtenerTodosLosEmpleados();
         List<EmpleadoRespuestaDTO> respuesta = empleados.stream()
                 .map(EmpleadoRespuestaDTO::new)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(respuesta);
     }
 
-    // Obtener empleado por ID
     @GetMapping("/{id}")
-    public ResponseEntity<EmpleadoRespuestaDTO> obtenerEmpleadoPorId(@PathVariable Long id) {
-        return empleadoService.obtenerEmpleadoPorId(id)
-                .map(empleado -> ResponseEntity.ok(new EmpleadoRespuestaDTO(empleado)))
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> obtenerEmpleadoPorId(@PathVariable Long id) {
+        Optional<Empleado> empleadoOpt = empleadoServicio.obtenerEmpleadoPorId(id);
+
+        if (empleadoOpt.isPresent()) {
+            return ResponseEntity.ok(new EmpleadoRespuestaDTO(empleadoOpt.get()));
+        } else {
+            Map<String, Object> error = new HashMap<>();
+            error.put("timestamp", LocalDateTime.now().toString());
+            error.put("status", 404);
+            error.put("error", "No encontrado");
+            error.put("mensaje", "Empleado no encontrado con ID: " + id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        }
     }
 
-    // Crear nuevo empleado
     @PostMapping
-    public ResponseEntity<EmpleadoRespuestaDTO> crearEmpleado(@Valid @RequestBody EmpleadoDTO empleadoDTO) {
-        if (empleadoService.existePorEmail(empleadoDTO.getEmail())) {
-            return ResponseEntity.badRequest().build();
+    public ResponseEntity<?> crearEmpleado(@Valid @RequestBody EmpleadoDTO empleadoDTO) {
+        if (empleadoServicio.existePorEmail(empleadoDTO.getEmail())) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("timestamp", LocalDateTime.now().toString());
+            error.put("status", 400);
+            error.put("error", "Email duplicado");
+            error.put("mensaje", "Ya existe un empleado con el email: " + empleadoDTO.getEmail());
+            return ResponseEntity.badRequest().body(error);
         }
 
-        Empleado creado = empleadoService.crearEmpleado(empleadoDTO);
-        EmpleadoRespuestaDTO respuesta = new EmpleadoRespuestaDTO(creado);
-        return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
+        try {
+            Empleado creado = empleadoServicio.crearEmpleado(empleadoDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new EmpleadoRespuestaDTO(creado));
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("timestamp", LocalDateTime.now().toString());
+            error.put("status", 500);
+            error.put("error", "Error al crear");
+            error.put("mensaje", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 
-    // Actualizar empleado
     @PutMapping("/{id}")
-    public ResponseEntity<EmpleadoRespuestaDTO> actualizarEmpleado(
+    public ResponseEntity<?> actualizarEmpleado(
             @PathVariable Long id,
             @Valid @RequestBody EmpleadoDTO empleadoDTO) {
         try {
-            Empleado actualizado = empleadoService.actualizarEmpleado(id, empleadoDTO);
-            EmpleadoRespuestaDTO respuesta = new EmpleadoRespuestaDTO(actualizado);
-            return ResponseEntity.ok(respuesta);
+            Empleado actualizado = empleadoServicio.actualizarEmpleado(id, empleadoDTO);
+            return ResponseEntity.ok(new EmpleadoRespuestaDTO(actualizado));
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            Map<String, Object> error = new HashMap<>();
+            error.put("timestamp", LocalDateTime.now().toString());
+            error.put("status", 404);
+            error.put("error", "No encontrado");
+            error.put("mensaje", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
         }
     }
 
-    // Eliminar empleado
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarEmpleado(@PathVariable Long id) {
-        empleadoService.eliminarEmpleado(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> eliminarEmpleado(@PathVariable Long id) {
+        try {
+            empleadoServicio.eliminarEmpleado(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("timestamp", LocalDateTime.now().toString());
+            error.put("status", 500);
+            error.put("error", "Error al eliminar");
+            error.put("mensaje", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 
-    // Buscar empleados
     @GetMapping("/buscar")
     public ResponseEntity<List<EmpleadoRespuestaDTO>> buscarEmpleados(@RequestParam String q) {
-        List<Empleado> empleados = empleadoService.buscarEmpleados(q);
-        List<EmpleadoRespuestaDTO> respuesta = empleados.stream()
-                .map(EmpleadoRespuestaDTO::new)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(respuesta);
-    }
-
-    // Obtener empleados por departamento
-    @GetMapping("/departamento/{departamento}")
-    public ResponseEntity<List<EmpleadoRespuestaDTO>> obtenerEmpleadosPorDepartamento(@PathVariable String departamento) {
-        List<Empleado> empleados = empleadoService.obtenerEmpleadosPorDepartamento(departamento);
+        List<Empleado> empleados = empleadoServicio.buscarEmpleados(q);
         List<EmpleadoRespuestaDTO> respuesta = empleados.stream()
                 .map(EmpleadoRespuestaDTO::new)
                 .collect(Collectors.toList());
