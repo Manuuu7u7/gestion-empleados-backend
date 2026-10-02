@@ -4,6 +4,7 @@ import com.empresa.gestion_empleados.dto.EmpleadoDTO;
 import com.empresa.gestion_empleados.dto.EmpleadoRespuestaDTO;
 import com.empresa.gestion_empleados.model.Empleado;
 import com.empresa.gestion_empleados.service.EmpleadoService;
+import com.empresa.gestion_empleados.service.SyncService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 public class EmpleadoController {
 
     private final EmpleadoService empleadoServicio;
+    private final SyncService syncService;   // ⭐ AGREGADO
 
     @GetMapping
     public ResponseEntity<List<EmpleadoRespuestaDTO>> obtenerTodosLosEmpleados() {
@@ -62,7 +64,12 @@ public class EmpleadoController {
         }
 
         try {
+            // 1. Guardar en base principal (Railway)
             Empleado creado = empleadoServicio.crearEmpleado(empleadoDTO);
+
+            // ⭐ 2. Sincronizar con XAMPP (backend local)
+            syncService.sincronizarEmpleado(empleadoDTO);
+
             return ResponseEntity.status(HttpStatus.CREATED).body(new EmpleadoRespuestaDTO(creado));
         } catch (Exception e) {
             Map<String, Object> error = new HashMap<>();
@@ -71,6 +78,29 @@ public class EmpleadoController {
             error.put("error", "Error al crear");
             error.put("mensaje", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    // ⭐ NUEVO ENDPOINT PARA SINCRONIZACIÓN
+    @PostMapping("/sync")
+    public ResponseEntity<?> sincronizarEmpleado(@RequestBody EmpleadoDTO empleadoDTO) {
+        try {
+            System.out.println("📥 Recibida petición de sync: " + empleadoDTO.getNombre() + " - " + empleadoDTO.getEmail());
+
+            // Verificar si ya existe por email
+            if (empleadoServicio.existePorEmail(empleadoDTO.getEmail())) {
+                System.out.println("⚠️ Empleado ya existe, saltando");
+                return ResponseEntity.ok("Empleado ya existe, saltando sincronización");
+            }
+
+            // Crear en la base de datos local (XAMPP)
+            Empleado creado = empleadoServicio.crearEmpleado(empleadoDTO);
+            System.out.println("✅ Empleado sincronizado: " + creado.getNombre());
+            return ResponseEntity.ok("Sincronizado");
+        } catch (Exception e) {
+            System.err.println("❌ Error al sincronizar: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 
